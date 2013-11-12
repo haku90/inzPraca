@@ -1,0 +1,7 @@
+DPDCH_NData=10;
+
+HS_DPCCH_NBits=30;
+
+E_DPDCH_NData=10;
+
+E_DPCCH_NBits=10;
