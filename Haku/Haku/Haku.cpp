@@ -113,6 +113,95 @@ public:
 	vec R_DPDCH;
 
 };
+class mGold
+{
+public:
+	int numG;
+	bvec p1,p2,ps1,ps2,c1,c2;
+	vec cv1,cv2;
+	cvec c;
+
+	mGold()
+	{
+	Parser p(std::string("config.txt"));
+	numG=p.get_int("numG");
+	p1.set_length(25);
+	p2.set_length(25);
+	
+	ps1.set_length(numG);
+	ps2.set_length(numG);
+
+	c1.set_length(numG);
+	c2.set_length(numG);
+
+	cv1.set_length(numG);
+	cv2.set_length(numG);
+	c.set_length(numG);
+
+	p1.zeros();
+	p2.zeros();
+	p1[0]=1;
+	p2[0]=1;
+	}
+	~mGold()
+	{
+		
+	}
+	void generate()
+	{
+		for(int i=0;i<numG;i++)
+	{
+		//cout<<"p1"<<endl;
+		//cout<<p1<<endl;
+		//cout<<"p2"<<endl;
+		//cout<<p2<<endl;
+		
+		ps1[i]=p1[20]+p1[17]+p1[6];
+		ps2[i]=p2[20]+p2[18]+p2[7];
+
+		p1.shift_right(p1[0]);
+		p2.shift_right(p2[0]);
+
+		p1[0]=p1[21]+p1[24];
+		p2[0]=p2[21]+p2[22]+p2[23]+p2[24];
+
+		c1[i]=p1[24]+p2[24];
+		c2[i]=ps1[i]+ps2[i];
+		
+	}
+		cout<<"c1"<<endl;
+		cout<<c1<<endl;
+
+		cout<<"c2"<<endl;
+		cout<<c2<<endl;
+
+	for(int i=0;i<numG;i++)
+	{
+		(c1(i)==0) ? cv1(i)=1: cv1(i)=-1;
+		(c2(i)==0) ? cv2(i)=1: cv2(i)=-1;
+
+	
+	}
+	cout<<"cv1"<<endl;
+	cout<<cv1<<endl;
+	cout<<"cv2"<<endl;
+	cout<<cv2<<endl;
+	complex<double>temp;
+	for(int i=0;i<numG;i++)
+	{
+		temp._Val[0]=cv1(i);
+		temp._Val[1]=pow(-1,i)*cv2(2*floor(i/2.0));
+		c(i)=temp;
+		
+		
+
+	
+	}
+	cout<<"c"<<endl;
+	cout<<c<<endl;
+	
+	}
+};
 
 int _tmain(int argc, _TCHAR* argv[])
 {
@@ -172,7 +261,7 @@ int _tmain(int argc, _TCHAR* argv[])
 			cout<<tr.DPCCH(i)<<" ";
 			
 		}
-	
+	cout<<endl;
 	//DPDCH 
 	//generowanie bitow
 	//tr.DPDCH=randb(tr.DPDCH_NData);
@@ -240,6 +329,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	cout<<tr.SP_DPCCH<<endl;
 	*/
 
-
+		mGold gold;
+		gold.generate();
 		return 0;
 }
