@@ -4,115 +4,6 @@
 
 using namespace itpp;
 using namespace std;
-class transmiter
-{
-public:
-	int SF;
-	int DPDCH_NData;
-
-	int DPCCH_NBits;
-
-	int DPCCH_SLOT0,DPCCH_SLOT1,DPCCH_SLOT2,DPCCH_SLOT3,DPCCH_SLOT4,DPCCH_SLOT5,DPCCH_SLOT6,DPCCH_SLOT7;
-	int DPCCH_SLOT8,DPCCH_SLOT9,DPCCH_SLOT10,DPCCH_SLOT11,DPCCH_SLOT12,DPCCH_SLOT13,DPCCH_SLOT14;
-	
-	
-
-	int HS_DPCCH_NBits;
-
-	int E_DPDCH_NData;
-	int E_DPCCH_NBits;
-
-	bvec DPDCH;
-	bvec DPCCH;
-	bvec HS_DPCCH;
-	bvec E_DPDCH;
-	bvec E_DPCCH;
-
-	vec  SP_DPCCH;
-	vec	 SP_DPDCH;
-	vec  SP_HS_DPCCH;
-	vec	 SP_E_DPDCH;
-	vec  SP_E_DPCCH;
-
-	vec spreading(bvec data,vec code)
-	{
-		vec result;
-		vec code_neg=code*-1;
-		for(int i=0; i<data.length();i++)
-		{
-		if(data[i]==1)
-		{
-			result=concat(result,code);
-		}
-		else
-		{
-			result=concat(result,code_neg);
-		}
-		}
-		return result;
-	}
-
-	transmiter()
-	{
-		Parser p(std::string("config.txt"));
-		DPCCH_NBits=p.get_int("DPCCH_NBits");
-		DPDCH_NData = p.get_int("DPDCH_NData");
-		HS_DPCCH_NBits=p.get_int("HS_DPCCH_NBits");
-		E_DPCCH_NBits=p.get_int("E_DPCCH_NBits");
-		E_DPDCH_NData=p.get_int("E_DPDCH_NData");
-		SF=p.get_int("SF");
-		DPCCH_SLOT0=p.get_int("DPCCH_SLOT0");
-		DPCCH_SLOT1=p.get_int("DPCCH_SLOT1");
-		DPCCH_SLOT2=p.get_int("DPCCH_SLOT2");
-		DPCCH_SLOT3=p.get_int("DPCCH_SLOT3");
-		DPCCH_SLOT4=p.get_int("DPCCH_SLOT4");
-		DPCCH_SLOT5=p.get_int("DPCCH_SLOT5");
-		DPCCH_SLOT6=p.get_int("DPCCH_SLOT6");
-		DPCCH_SLOT7=p.get_int("DPCCH_SLOT7");
-		DPCCH_SLOT8=p.get_int("DPCCH_SLOT8");
-		DPCCH_SLOT9=p.get_int("DPCCH_SLOT9");
-		DPCCH_SLOT10=p.get_int("DPCCH_SLOT10");
-		DPCCH_SLOT11=p.get_int("DPCCH_SLOT11");
-		DPCCH_SLOT12=p.get_int("DPCCH_SLOT12");				
-		DPCCH_SLOT13=p.get_int("DPCCH_SLOT13");
-		DPCCH_SLOT14=p.get_int("DPCCH_SLOT14");
-
-		bvec DPCCH0=dec2bin(DPCCH_SLOT0,true);
-		bvec DPCCH1=dec2bin(DPCCH_SLOT1,true);
-		bvec DPCCH2=dec2bin(DPCCH_SLOT2,true);
-		bvec DPCCH3=dec2bin(DPCCH_SLOT3,true);
-		bvec DPCCH4=dec2bin(DPCCH_SLOT4,true);
-		bvec DPCCH5=dec2bin(DPCCH_SLOT5,true);
-		bvec DPCCH6=dec2bin(DPCCH_SLOT6,true);
-		bvec DPCCH7=dec2bin(DPCCH_SLOT7,true);
-		bvec DPCCH8=dec2bin(DPCCH_SLOT8,true);
-		bvec DPCCH9=dec2bin(DPCCH_SLOT9,true);
-		bvec DPCCH10=dec2bin(DPCCH_SLOT10,true);
-		bvec DPCCH11=dec2bin(DPCCH_SLOT11,true);
-		bvec DPCCH12=dec2bin(DPCCH_SLOT12,true);
-		bvec DPCCH13=dec2bin(DPCCH_SLOT13,true);
-		bvec DPCCH14=dec2bin(DPCCH_SLOT14,true);
-		
-		DPCCH.set_length(DPCCH_NBits,false);
-		bvec conDPCCH0=concat(DPCCH0,DPCCH1,DPCCH2,DPCCH3,DPCCH4);
-		bvec conDPCCH1=concat(DPCCH5,DPCCH6,DPCCH7,DPCCH8,DPCCH9);
-		bvec conDPCCH2=concat(DPCCH10,DPCCH11,DPCCH12,DPCCH13,DPCCH14);
-		DPCCH=concat(conDPCCH0,conDPCCH1,conDPCCH2);
-
-		DPDCH=randb(DPDCH_NData);
-		HS_DPCCH=randb(HS_DPCCH_NBits);
-
-		
-	}
-	~transmiter(){};
-};
-class receiver
-{
-public:
-	vec R_DPCCH;
-	vec R_DPDCH;
-
-};
 class mGold
 {
 public:
@@ -169,11 +60,7 @@ public:
 		c2[i]=ps1[i]+ps2[i];
 		
 	}
-		cout<<"c1"<<endl;
-		cout<<c1<<endl;
-
-		cout<<"c2"<<endl;
-		cout<<c2<<endl;
+		
 
 	for(int i=0;i<numG;i++)
 	{
@@ -182,10 +69,7 @@ public:
 
 	
 	}
-	cout<<"cv1"<<endl;
-	cout<<cv1<<endl;
-	cout<<"cv2"<<endl;
-	cout<<cv2<<endl;
+	
 	complex<double>temp;
 	for(int i=0;i<numG;i++)
 	{
@@ -197,139 +81,203 @@ public:
 
 	
 	}
-	cout<<"c"<<endl;
-	cout<<c<<endl;
+	
 	
 	}
+};
+
+class transmiter
+{
+public:
+	int SF;
+	
+
+	int DPCCH_NBits;
+
+	int DPCCH_SLOT0,DPCCH_SLOT1,DPCCH_SLOT2,DPCCH_SLOT3,DPCCH_SLOT4,DPCCH_SLOT5,DPCCH_SLOT6,DPCCH_SLOT7;
+	int DPCCH_SLOT8,DPCCH_SLOT9,DPCCH_SLOT10,DPCCH_SLOT11,DPCCH_SLOT12,DPCCH_SLOT13,DPCCH_SLOT14;
+	
+	
+
+	int HS_DPCCH_NBits;
+
+	int E_DPDCH1_NData, E_DPDCH2_NData,E_DPDCH3_NData,E_DPDCH4_NData;
+	int E_DPCCH_NBits;
+	double betaDPCCH,betaE_DPDCH,betaE_DPCCH,betaE_HS_DPCCH;
+	double betaDPCCHlin,betaE_DPDCHlin,betaE_DPCCHlin,betaE_HS_DPCCHlin;
+	vec OVSF256_0,OVSF256_1,OVSF256_33,OVSF256_64,OVSF256_65,OVSF256_66,OVSF256_67;
+
+	bvec DPCCH;
+	bvec HS_DPCCH;
+	bvec E_DPDCH1,E_DPDCH2,E_DPDCH3,E_DPDCH4;
+	bvec E_DPCCH;
+
+	vec  SP_DPCCH;
+	vec  SP_HS_DPCCH;
+	vec	 SP_E_DPDCH1,SP_E_DPDCH2,SP_E_DPDCH3,SP_E_DPDCH4;
+	vec  SP_E_DPCCH;
+
+
+	cvec radioFrame;
+
+	mGold gold;
+
+	smat OVSF;
+	vec spreading(bvec data,vec code)
+	{
+		vec result;
+		vec code_neg=code*-1;
+		for(int i=0; i<data.length();i++)
+		{
+		if(data[i]==1)
+		{
+			result=concat(result,code);
+		}
+		else
+		{
+			result=concat(result,code_neg);
+		}
+		}
+		return result;
+	}
+
+	transmiter()
+	{
+		Parser p(std::string("config.txt"));
+		DPCCH_NBits=p.get_int("DPCCH_NBits");
+		
+		HS_DPCCH_NBits=p.get_int("HS_DPCCH_NBits");
+		E_DPCCH_NBits=p.get_int("E_DPCCH_NBits");
+		E_DPDCH1_NData=p.get_int("E_DPDCH1_NData");
+		E_DPDCH2_NData=p.get_int("E_DPDCH2_NData");
+		SF=p.get_int("SF");
+		DPCCH_SLOT0=p.get_int("DPCCH_SLOT0");
+		DPCCH_SLOT1=p.get_int("DPCCH_SLOT1");
+		DPCCH_SLOT2=p.get_int("DPCCH_SLOT2");
+		DPCCH_SLOT3=p.get_int("DPCCH_SLOT3");
+		DPCCH_SLOT4=p.get_int("DPCCH_SLOT4");
+		DPCCH_SLOT5=p.get_int("DPCCH_SLOT5");
+		DPCCH_SLOT6=p.get_int("DPCCH_SLOT6");
+		DPCCH_SLOT7=p.get_int("DPCCH_SLOT7");
+		DPCCH_SLOT8=p.get_int("DPCCH_SLOT8");
+		DPCCH_SLOT9=p.get_int("DPCCH_SLOT9");
+		DPCCH_SLOT10=p.get_int("DPCCH_SLOT10");
+		DPCCH_SLOT11=p.get_int("DPCCH_SLOT11");
+		DPCCH_SLOT12=p.get_int("DPCCH_SLOT12");				
+		DPCCH_SLOT13=p.get_int("DPCCH_SLOT13");
+		DPCCH_SLOT14=p.get_int("DPCCH_SLOT14");
+		 
+		betaDPCCH=p.get_int("betaDPCCH");
+		betaE_DPDCH=p.get_int("betaE_DPDCH");
+		betaE_DPCCH=p.get_int("betaE_DPCCH");
+		betaE_HS_DPCCH=p.get_int("betaE_HS_DPCCH");
+	
+		betaDPCCHlin=pow10(betaDPCCH/10.0);
+		betaE_DPDCH=pow10(betaE_DPDCH/10.0);
+		betaE_DPCCH=pow10(betaE_DPCCH/10.0);
+		betaE_HS_DPCCH=pow10(betaE_HS_DPCCH/10.0);
+
+		OVSF=wcdma_spreading_codes (SF);
+		OVSF256_0.set_length(SF,false);
+		OVSF256_1.set_length(SF,false);
+		OVSF256_33.set_length(SF,false);
+		OVSF256_64.set_length(SF,false);
+		OVSF256_65.set_length(SF,false);
+		OVSF256_66.set_length(SF,false);
+		OVSF256_67.set_length(SF,false);
+
+		for(int i=0;i<OVSF.cols();i++)
+		{
+		OVSF256_0[i]=OVSF(0,i);
+		OVSF256_1[i]=OVSF(1,i);
+		OVSF256_33[i]=OVSF(33,i);
+		OVSF256_64[i]=OVSF(64,i);
+		OVSF256_65[i]=OVSF(65,i);
+		OVSF256_66[i]=OVSF(66,i);
+		OVSF256_67[i]=OVSF(67,i);
+		}
+
+		bvec DPCCH0=dec2bin(DPCCH_SLOT0,true);
+		bvec DPCCH1=dec2bin(DPCCH_SLOT1,true);
+		bvec DPCCH2=dec2bin(DPCCH_SLOT2,true);
+		bvec DPCCH3=dec2bin(DPCCH_SLOT3,true);
+		bvec DPCCH4=dec2bin(DPCCH_SLOT4,true);
+		bvec DPCCH5=dec2bin(DPCCH_SLOT5,true);
+		bvec DPCCH6=dec2bin(DPCCH_SLOT6,true);
+		bvec DPCCH7=dec2bin(DPCCH_SLOT7,true);
+		bvec DPCCH8=dec2bin(DPCCH_SLOT8,true);
+		bvec DPCCH9=dec2bin(DPCCH_SLOT9,true);
+		bvec DPCCH10=dec2bin(DPCCH_SLOT10,true);
+		bvec DPCCH11=dec2bin(DPCCH_SLOT11,true);
+		bvec DPCCH12=dec2bin(DPCCH_SLOT12,true);
+		bvec DPCCH13=dec2bin(DPCCH_SLOT13,true);
+		bvec DPCCH14=dec2bin(DPCCH_SLOT14,true);
+		
+		DPCCH.set_length(DPCCH_NBits,false);
+		bvec conDPCCH0=concat(DPCCH0,DPCCH1,DPCCH2,DPCCH3,DPCCH4);
+		bvec conDPCCH1=concat(DPCCH5,DPCCH6,DPCCH7,DPCCH8,DPCCH9);
+		bvec conDPCCH2=concat(DPCCH10,DPCCH11,DPCCH12,DPCCH13,DPCCH14);
+		DPCCH=concat(conDPCCH0,conDPCCH1,conDPCCH2);
+
+		gold.generate();
+
+
+		
+	}
+	~transmiter(){};
+};
+class receiver
+{
+public:
+	vec R_DPCCH;
+	vec R_DPDCH;
+
 };
 
 int _tmain(int argc, _TCHAR* argv[])
 {
 	transmiter tr;
 
-	smat OVSF=wcdma_spreading_codes (tr.SF);
-
-	/*
-	for(int i=0;i<OVSF.cols();i++)
-	{
-		for(int j=0;j<OVSF.rows();j++)
-		{
-		cout<<OVSF(i,j)<<" ";
-		
-		}
-		cout<<endl;
-	}
-	*/
 	
-	vec OVSF256_0;
-	OVSF256_0.set_length(tr.SF,false);
-
-	vec OVSF256_1;
-	OVSF256_1.set_length(tr.SF,false);
-	vec OVSF256_2;
-	OVSF256_2.set_length(tr.SF,false);
-	vec OVSF256_3;
-	OVSF256_3.set_length(tr.SF,false);
-	vec OVSF256_4;
-	OVSF256_4.set_length(tr.SF,false);
-	vec OVSF256_5;
-	OVSF256_5.set_length(tr.SF,false);
-	vec OVSF256_64;
-	OVSF256_64.set_length(tr.SF,false);
-	
-
-	for(int i=0;i<OVSF.cols();i++)
-	{
-		OVSF256_0[i]=OVSF(0,i);
-		OVSF256_1[i]=OVSF(1,i);
-		OVSF256_2[i]=OVSF(2,i);
-		OVSF256_3[i]=OVSF(3,i);
-		OVSF256_4[i]=OVSF(4,i);
-		OVSF256_5[i]=OVSF(5,i);
-		OVSF256_64[i]=OVSF(64,i);
-		
-	}
-
-	
-	cout<<"DPCCH cale"<<endl;
-		for(int i=0;i<tr.DPCCH_NBits;i++)
-		{
-			if(i%10==0 &&i>0)
-			{
-				cout<<endl;
-			}
-			cout<<tr.DPCCH(i)<<" ";
-			
-		}
-	cout<<endl;
-	//DPDCH 
-	//generowanie bitow
-	//tr.DPDCH=randb(tr.DPDCH_NData);
-	/*
-	cout<<"bity kanal DPDCH"<<endl;
-	cout<<tr.DPDCH<<endl;
-	*/
-	//rozpraszanie
-	//tr.SP_DPDCH=tr.spreading(tr.DPDCH,OVSF256_64);
-	/*
-	cout<<"rozproszone DPDCH"<<endl;
-	cout<<tr.SP_DPDCH<<endl;
-	*/
-	//HS_DPCCH
-	//generowanie bitow
-	//tr.HS_DPCCH=randb(tr.HS_DPCCH_NBits);
-	/*
-	cout<<"bity kanal HS_DPCCH"<<endl;
-	cout<<tr.HS_DPCCH<<endl;
-	*/
-	//rozpraszanie
-	//tr.SP_HS_DPCCH=tr.spreading(tr.HS_DPCCH,OVSF256_2);
-	/*
-	cout<<"rozproszone HS_DPCCH"<<endl;
-	cout<<tr.SP_HS_DPCCH<<endl;
-	*/
-	//E_DPDCH
-	//generowanie bitow
-	//tr.E_DPDCH=randb(tr.E_DPDCH_NData);
-	/*
-	cout<<"bity kanal E_DPDCH"<<endl;
-	cout<<tr.E_DPDCH<<endl;
-	*/
-	//rozpraszanie
-	//tr.SP_E_DPDCH=tr.spreading(tr.E_DPDCH,OVSF256_3);
-	/*
-	cout<<"bity kanal E_DPDCH"<<endl;
-	cout<<tr.SP_E_DPDCH<<endl;
-	*/
-
-	//E_DPCCH
-	//generowanie bitow
-	//tr.E_DPCCH=randb(tr.E_DPCCH_NBits);
-	/*
-	cout<<"bity kanal E_DPDCH"<<endl;
-	cout<<tr.E_DPCCH<<endl;
-	*/
-	//rozpraszanie
-	//tr.SP_E_DPCCH=tr.spreading(tr.E_DPCCH,OVSF256_4);
-	/*
-	cout<<"rozproszone E_DPDCH"<<endl;
-	cout<<tr.SP_E_DPCCH<<endl;
-	*/
 	//DPCCH
-	//generowanie bitow
-	
+	tr.SP_DPCCH=tr.spreading(tr.DPCCH,tr.OVSF256_0);
+	//HS-DPCCH
+	tr.HS_DPCCH=randb(tr.HS_DPCCH_NBits);
+	tr.SP_HS_DPCCH=tr.spreading(tr.HS_DPCCH,tr.OVSF256_33);
+	//E-DPCCH
+	tr.E_DPCCH=randb(tr.E_DPCCH_NBits);
+	tr.SP_E_DPCCH=tr.spreading(tr.E_DPCCH,tr.OVSF256_1);
+	//E-DPDCH
+	tr.E_DPDCH1=randb(tr.E_DPDCH1_NData);
+	tr.E_DPDCH2=randb(tr.E_DPDCH2_NData);
+	tr.E_DPDCH3=randb(tr.E_DPDCH3_NData);
+	tr.E_DPDCH4=randb(tr.E_DPDCH4_NData);
+	tr.SP_E_DPDCH1=tr.spreading(tr.E_DPDCH1,tr.OVSF256_64);
+	tr.SP_E_DPDCH2=tr.spreading(tr.E_DPDCH1,tr.OVSF256_65);
+	tr.SP_E_DPDCH3=tr.spreading(tr.E_DPDCH1,tr.OVSF256_66);
+	tr.SP_E_DPDCH4=tr.spreading(tr.E_DPDCH1,tr.OVSF256_67);
+	//beta
 	/*
-	cout<<"bity kanalu E_DPCCH"<<endl;
-	cout<<tr.DPCCH<<endl;
+	tr.SP_DPCCH=tr.SP_DPCCH*tr.betaDPCCHlin;
+	tr.SP_HS_DPCCH=tr.SP_HS_DPCCH*tr.betaE_HS_DPCCHlin;
+	tr.SP_E_DPCCH=tr.SP_E_DPCCH*tr.betaE_DPCCHlin;
+	tr.SP_E_DPDCH1=tr.SP_E_DPDCH1*tr.betaE_DPDCHlin;
+	tr.SP_E_DPDCH2=tr.SP_E_DPDCH2*tr.betaE_DPDCHlin;
+	tr.SP_E_DPDCH3=tr.SP_E_DPDCH3*tr.betaE_DPDCHlin;
+	tr.SP_E_DPDCH4=tr.SP_E_DPDCH4*tr.betaE_DPDCHlin;	
 	*/
-	//rozpraszanie
-	//tr.SP_DPCCH=tr.spreading(tr.DPCCH,OVSF256_0);
-	/*
-	cout<<"rozproszone"<<endl;
-	cout<<tr.SP_DPCCH<<endl;
-	*/
+	//radio frame
+	tr.radioFrame.set_length(tr.gold.numG);
+	for(int i=0;i<tr.gold.numG;i++)
+	{
+		tr.radioFrame[i]._Val[0]=tr.SP_E_DPCCH[i]+tr.SP_E_DPDCH1[i]+tr.SP_E_DPDCH3[i];
+		tr.radioFrame[i]._Val[1]=tr.SP_DPCCH[i]+tr.SP_HS_DPCCH[i]+tr.SP_E_DPDCH2[i]+tr.SP_E_DPDCH4[i];
+	}
 
-		mGold gold;
-		gold.generate();
+	cout<<"radio frame"<<endl;
+	for(int i=0;i<10;i++)
+	cout<<tr.radioFrame[i]<<" ";
+	cout<<endl;
+
 		return 0;
 }
