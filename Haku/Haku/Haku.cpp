@@ -278,6 +278,69 @@ int _tmain(int argc, _TCHAR* argv[])
 	for(int i=0;i<10;i++)
 	cout<<tr.radioFrame[i]<<" ";
 	cout<<endl;
+	cvec scRadioFrame,sc2RadioFrame;
+	scRadioFrame.set_length(tr.gold.numG);
+	sc2RadioFrame.set_length(tr.gold.numG);
+	for(int i=0;i<tr.gold.numG;i++)
+	scRadioFrame[i]=scRadioFrame[i]*tr.gold.c[i];
+	cout<<"radio frame scrambling"<<endl;
+	for(int i=0;i<10;i++)
+	{
+		cout<<scRadioFrame[i]<<" ";
+	}
+	cout<<endl;
+	for(int i=0;i<tr.gold.numG;i++)
+	sc2RadioFrame[i]=sc2RadioFrame[i]*tr.gold.c[i];
+	cout<<"radio frame scrambling/scrambling"<<endl;
+	for(int i=0;i<10;i++)
+	{
+		cout<<sc2RadioFrame[i]<<" ";
+	}
+	cout<<endl;
+	vec rReciv=real(sc2RadioFrame);
+	vec iReciv=imag(sc2RadioFrame);
+	
+	mat matrixCode,matrixReal;
+	matrixCode.set_size(150,256);
+	matrixReal.set_size(150,256);
+	vec reciveDPCCH;
+	reciveDPCCH.set_length(150);
+	for(int i=0;i<150;i++)
+	{
+		for(int j=0;j<256;j++)
+		{
+			//matrixCode(i,j)=Ovsf0(j);
+			matrixReal(i,j)=rReciv((i*31)+j);
+		}
+	}
+	
+	for(int i=0;i<150;i++)
+	{
+		vec temp;
+		temp=matrixReal.get_row(i);
+		for(int j=0;j<256;j++)
+		{
+			reciveDPCCH[i]=reciveDPCCH[i]+(temp(j)*tr.OVSF256_0(j));
+		}
+	}
+	bvec breciveDPCCH;
+	breciveDPCCH.set_size(150);
+	for(int i=0;i<150;i++)
+	{
+		(reciveDPCCH[i]>=0) ? breciveDPCCH[i]=1 : breciveDPCCH[i]=0;
 
-		return 0;
+	}
+	cout<<"DPCCH"<<endl;
+	cout<<tr.DPCCH<<endl;
+	
+	cout<<"DPCCH^"<<endl;
+	cout<<breciveDPCCH<<endl;
+
+	BERC br;
+	br.count(tr.DPCCH,breciveDPCCH);
+	cout<<"bledy"<<endl;
+	cout<<br.get_errors()<<endl;
+	cout<<"BER"<<endl;
+	cout<<br.get_errorrate()<<endl;
+	return 0;
 }
