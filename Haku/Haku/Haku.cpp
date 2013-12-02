@@ -376,6 +376,11 @@ int _tmain(int argc, _TCHAR* argv[])
 	rec.DPCCH=rec.despreading(tr.DPCCH_NBits,tr.OVSF256_0,true);
 	rec.E_DPCCH=rec.despreading(tr.E_DPCCH_NBits,tr.OVSF256_1,false);
 	rec.HS_DPCCH=rec.despreading(tr.HS_DPCCH_NBits,tr.OVSF256_33,true);
+	rec.E_DPDCH1=rec.despreading(tr.E_DPDCH1_NData,tr.OVSF256_64,false);
+
+	rec.E_DPDCH2=rec.despreading(tr.E_DPDCH2_NData,tr.OVSF4_1,true);
+	rec.E_DPDCH3=rec.despreading(tr.E_DPDCH3_NData,tr.OVSF4_1,false);
+	rec.E_DPDCH4=rec.despreading(tr.E_DPDCH4_NData,tr.OVSF4_1,true);
 
 	BERC br;
 	br.count(tr.DPCCH,rec.DPCCH);
@@ -398,6 +403,34 @@ int _tmain(int argc, _TCHAR* argv[])
 	cout<<"BER HS-DPCCH"<<endl;
 	cout<<br.get_errorrate()<<endl;
 
+	br.clear();
+	br.count(tr.E_DPDCH1,rec.E_DPDCH1);
+	cout<<"bledy E-DPDCH1"<<endl;
+	cout<<br.get_errors()<<endl;
+	cout<<"BER E-DPDCH1"<<endl;
+	cout<<br.get_errorrate()<<endl;
+
+	br.clear();
+	br.count(tr.E_DPDCH2,rec.E_DPDCH2);
+	cout<<"bledy E-DPDCH2"<<endl;
+	cout<<br.get_errors()<<endl;
+	cout<<"BER E-DPDCH2"<<endl;
+	cout<<br.get_errorrate()<<endl;
+
+	br.clear();
+	br.count(tr.E_DPDCH3,rec.E_DPDCH3);
+	cout<<"bledy E-DPDCH3"<<endl;
+	cout<<br.get_errors()<<endl;
+	cout<<"BER E-DPDCH3"<<endl;
+	cout<<br.get_errorrate()<<endl;
+
+	br.clear();
+	br.count(tr.E_DPDCH4,rec.E_DPDCH4);
+	cout<<"bledy E-DPDCH4"<<endl;
+	cout<<br.get_errors()<<endl;
+	cout<<"BER E-DPDCH4"<<endl;
+	cout<<br.get_errorrate()<<endl;
+	
 	
 	return 0;
 }
