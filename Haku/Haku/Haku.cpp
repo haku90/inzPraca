@@ -10,8 +10,8 @@ public:
 	int numG;
 	bvec p1,p2,ps1,ps2,c1,c2;
 	vec cv1,cv2;
-	cvec c;
-
+	cvec c,cConjugate;
+	
 	mGold()
 	{
 	Parser p(std::string("config.txt"));
@@ -21,14 +21,14 @@ public:
 	
 	ps1.set_length(numG);
 	ps2.set_length(numG);
-
+	
 	c1.set_length(numG);
 	c2.set_length(numG);
 
 	cv1.set_length(numG);
 	cv2.set_length(numG);
 	c.set_length(numG);
-
+	cConjugate.set_length(numG);
 	p1.zeros();
 	p2.zeros();
 	p1[0]=1;
@@ -76,7 +76,8 @@ public:
 		temp._Val[0]=cv1(i);
 		temp._Val[1]=pow(-1,i)*cv2(2*floor(i/2.0));
 		c(i)=temp;
-		
+		cConjugate[i]=c(i);
+		cConjugate[i]._Val[1]=cConjugate[i]._Val[1]*(-1.0);
 		
 
 	
@@ -90,7 +91,7 @@ class transmiter
 {
 public:
 	int SF;
-	
+	int SF_EDPDCH;
 
 	int DPCCH_NBits;
 
@@ -105,7 +106,9 @@ public:
 	int E_DPCCH_NBits;
 	double betaDPCCH,betaE_DPDCH,betaE_DPCCH,betaE_HS_DPCCH;
 	double betaDPCCHlin,betaE_DPDCHlin,betaE_DPCCHlin,betaE_HS_DPCCHlin;
+
 	vec OVSF256_0,OVSF256_1,OVSF256_33,OVSF256_64,OVSF256_65,OVSF256_66,OVSF256_67;
+	vec	OVSF4_1,OVSF4_2;
 
 	bvec DPCCH;
 	bvec HS_DPCCH;
@@ -123,6 +126,7 @@ public:
 	mGold gold;
 
 	smat OVSF;
+	smat OVSF4;
 	vec spreading(bvec data,vec code)
 	{
 		vec result;
@@ -140,6 +144,17 @@ public:
 		}
 		return result;
 	}
+	cvec scrambling(cvec data,cvec code)
+	{
+		cvec result;
+		result.set_length(data.length());
+		result.zeros();
+		for(int i=0;i<data.length();i++)
+		{
+			result[i]=data(i)*code(i);
+		}
+		return result;
+	}
 
 	transmiter()
 	{
@@ -150,7 +165,10 @@ public:
 		E_DPCCH_NBits=p.get_int("E_DPCCH_NBits");
 		E_DPDCH1_NData=p.get_int("E_DPDCH1_NData");
 		E_DPDCH2_NData=p.get_int("E_DPDCH2_NData");
+		E_DPDCH3_NData=p.get_int("E_DPDCH3_NData");
+		E_DPDCH4_NData=p.get_int("E_DPDCH4_NData");
 		SF=p.get_int("SF");
+		SF_EDPDCH=p.get_int("SF_EDPDCH");
 		DPCCH_SLOT0=p.get_int("DPCCH_SLOT0");
 		DPCCH_SLOT1=p.get_int("DPCCH_SLOT1");
 		DPCCH_SLOT2=p.get_int("DPCCH_SLOT2");
@@ -173,11 +191,13 @@ public:
 		betaE_HS_DPCCH=p.get_int("betaE_HS_DPCCH");
 	
 		betaDPCCHlin=pow10(betaDPCCH/10.0);
-		betaE_DPDCH=pow10(betaE_DPDCH/10.0);
-		betaE_DPCCH=pow10(betaE_DPCCH/10.0);
-		betaE_HS_DPCCH=pow10(betaE_HS_DPCCH/10.0);
+		betaE_DPDCHlin=pow10(betaE_DPDCH/10.0);
+		betaE_DPCCHlin=pow10(betaE_DPCCH/10.0);
+		betaE_HS_DPCCHlin=pow10(betaE_HS_DPCCH/10.0);
 
 		OVSF=wcdma_spreading_codes (SF);
+		OVSF4=wcdma_spreading_codes(SF_EDPDCH);
+
 		OVSF256_0.set_length(SF,false);
 		OVSF256_1.set_length(SF,false);
 		OVSF256_33.set_length(SF,false);
@@ -185,6 +205,9 @@ public:
 		OVSF256_65.set_length(SF,false);
 		OVSF256_66.set_length(SF,false);
 		OVSF256_67.set_length(SF,false);
+
+		OVSF4_1.set_length(SF_EDPDCH,false);
+		OVSF4_2.set_length(SF_EDPDCH,false);
 
 		for(int i=0;i<OVSF.cols();i++)
 		{
@@ -195,6 +218,11 @@ public:
 		OVSF256_65[i]=OVSF(65,i);
 		OVSF256_66[i]=OVSF(66,i);
 		OVSF256_67[i]=OVSF(67,i);
+		}
+		for(int i=0;i<OVSF4.cols();i++)
+		{
+			OVSF4_1[i]=OVSF4(1,i);
+			OVSF4_2[i]=OVSF4(2,i);
 		}
 
 		bvec DPCCH0=dec2bin(DPCCH_SLOT0,true);
@@ -229,15 +257,73 @@ public:
 class receiver
 {
 public:
-	vec R_DPCCH;
-	vec R_DPDCH;
+	bvec DPCCH;
+	bvec HS_DPCCH;
+	bvec E_DPDCH1,E_DPDCH2,E_DPDCH3,E_DPDCH4;
+	bvec E_DPCCH;
+
+	vec	 iRecive;
+	vec	 rRecive;
+	receiver(){};
+	~receiver(){};
+	bvec despreading(int lenData,vec code,bool img)
+	{
+		int lenCode=code.length();
+		mat matrix;
+		bvec result;
+		vec dspread;
+		result.set_length(lenData);
+		dspread.set_length(lenData);
+		matrix.set_size(lenData,lenCode);
+		dspread.zeros();
+		for(int i=0;i<lenData;i++)
+		{
+			for(int j=0;j<lenCode;j++)
+			{
+				if(img==true)
+				{
+					matrix(i,j)=iRecive((i*lenCode)+j);
+				}
+				else
+				{
+					matrix(i,j)=rRecive((i*lenCode)+j);
+				}
+			}
+		}
+		vec temp;
+		for(int i=0;i<lenData;i++)
+		{
+			temp=matrix.get_row(i);
+		for(int j=0;j<lenCode;j++)
+		{
+			dspread[i]+=(temp(j)*code(j));
+		}
+		(dspread[i]>0) ? result[i]=1 : result[i]=0;
+		}
+
+		return result;
+	}
+	cvec descrambling(cvec data,cvec code)
+	{
+		cvec result;
+		result.set_length(data.length());
+		result.zeros();
+		for(int i=0;i<data.length();i++)
+		{
+			result[i]=data(i)*code(i);
+		}
+		return result;
+	}
+
 
 };
 
 int _tmain(int argc, _TCHAR* argv[])
 {
 	transmiter tr;
-
+	AWGN_Channel awg;
+	receiver rec;
+	
 	
 	//DPCCH
 	tr.SP_DPCCH=tr.spreading(tr.DPCCH,tr.OVSF256_0);
@@ -253,11 +339,11 @@ int _tmain(int argc, _TCHAR* argv[])
 	tr.E_DPDCH3=randb(tr.E_DPDCH3_NData);
 	tr.E_DPDCH4=randb(tr.E_DPDCH4_NData);
 	tr.SP_E_DPDCH1=tr.spreading(tr.E_DPDCH1,tr.OVSF256_64);
-	tr.SP_E_DPDCH2=tr.spreading(tr.E_DPDCH1,tr.OVSF256_65);
-	tr.SP_E_DPDCH3=tr.spreading(tr.E_DPDCH1,tr.OVSF256_66);
-	tr.SP_E_DPDCH4=tr.spreading(tr.E_DPDCH1,tr.OVSF256_67);
+	tr.SP_E_DPDCH2=tr.spreading(tr.E_DPDCH2,tr.OVSF4_1);
+	tr.SP_E_DPDCH3=tr.spreading(tr.E_DPDCH3,tr.OVSF4_1);
+	tr.SP_E_DPDCH4=tr.spreading(tr.E_DPDCH4,tr.OVSF4_1);
 	//beta
-	/*
+
 	tr.SP_DPCCH=tr.SP_DPCCH*tr.betaDPCCHlin;
 	tr.SP_HS_DPCCH=tr.SP_HS_DPCCH*tr.betaE_HS_DPCCHlin;
 	tr.SP_E_DPCCH=tr.SP_E_DPCCH*tr.betaE_DPCCHlin;
@@ -265,82 +351,53 @@ int _tmain(int argc, _TCHAR* argv[])
 	tr.SP_E_DPDCH2=tr.SP_E_DPDCH2*tr.betaE_DPDCHlin;
 	tr.SP_E_DPDCH3=tr.SP_E_DPDCH3*tr.betaE_DPDCHlin;
 	tr.SP_E_DPDCH4=tr.SP_E_DPDCH4*tr.betaE_DPDCHlin;	
-	*/
+	
 	//radio frame
 	tr.radioFrame.set_length(tr.gold.numG);
 	for(int i=0;i<tr.gold.numG;i++)
 	{
 		tr.radioFrame[i]._Val[0]=tr.SP_E_DPCCH[i]+tr.SP_E_DPDCH1[i]+tr.SP_E_DPDCH3[i];
 		tr.radioFrame[i]._Val[1]=tr.SP_DPCCH[i]+tr.SP_HS_DPCCH[i]+tr.SP_E_DPDCH2[i]+tr.SP_E_DPDCH4[i];
+	
 	}
+	
+	
+	cvec radioFrameScrambling,radioFrameDescr,channel;
+	radioFrameScrambling=tr.scrambling(tr.radioFrame,tr.gold.c);
+	//kanal
+	//awg.set_noise();
+	channel=awg(radioFrameScrambling);
+	
+	//odbiornik
+	radioFrameDescr=rec.descrambling(channel,tr.gold.cConjugate);
+	rec.rRecive=real(radioFrameDescr);
+	rec.iRecive=imag(radioFrameDescr);
 
-	cout<<"radio frame"<<endl;
-	for(int i=0;i<10;i++)
-	cout<<tr.radioFrame[i]<<" ";
-	cout<<endl;
-	cvec scRadioFrame,sc2RadioFrame;
-	scRadioFrame.set_length(tr.gold.numG);
-	sc2RadioFrame.set_length(tr.gold.numG);
-	for(int i=0;i<tr.gold.numG;i++)
-	scRadioFrame[i]=scRadioFrame[i]*tr.gold.c[i];
-	cout<<"radio frame scrambling"<<endl;
-	for(int i=0;i<10;i++)
-	{
-		cout<<scRadioFrame[i]<<" ";
-	}
-	cout<<endl;
-	for(int i=0;i<tr.gold.numG;i++)
-	sc2RadioFrame[i]=sc2RadioFrame[i]*tr.gold.c[i];
-	cout<<"radio frame scrambling/scrambling"<<endl;
-	for(int i=0;i<10;i++)
-	{
-		cout<<sc2RadioFrame[i]<<" ";
-	}
-	cout<<endl;
-	vec rReciv=real(sc2RadioFrame);
-	vec iReciv=imag(sc2RadioFrame);
-	
-	mat matrixCode,matrixReal;
-	matrixCode.set_size(150,256);
-	matrixReal.set_size(150,256);
-	vec reciveDPCCH;
-	reciveDPCCH.set_length(150);
-	for(int i=0;i<150;i++)
-	{
-		for(int j=0;j<256;j++)
-		{
-			//matrixCode(i,j)=Ovsf0(j);
-			matrixReal(i,j)=rReciv((i*31)+j);
-		}
-	}
-	
-	for(int i=0;i<150;i++)
-	{
-		vec temp;
-		temp=matrixReal.get_row(i);
-		for(int j=0;j<256;j++)
-		{
-			reciveDPCCH[i]=reciveDPCCH[i]+(temp(j)*tr.OVSF256_0(j));
-		}
-	}
-	bvec breciveDPCCH;
-	breciveDPCCH.set_size(150);
-	for(int i=0;i<150;i++)
-	{
-		(reciveDPCCH[i]>=0) ? breciveDPCCH[i]=1 : breciveDPCCH[i]=0;
-
-	}
-	cout<<"DPCCH"<<endl;
-	cout<<tr.DPCCH<<endl;
-	
-	cout<<"DPCCH^"<<endl;
-	cout<<breciveDPCCH<<endl;
+	rec.DPCCH=rec.despreading(tr.DPCCH_NBits,tr.OVSF256_0,true);
+	rec.E_DPCCH=rec.despreading(tr.E_DPCCH_NBits,tr.OVSF256_1,false);
+	rec.HS_DPCCH=rec.despreading(tr.HS_DPCCH_NBits,tr.OVSF256_33,true);
 
 	BERC br;
-	br.count(tr.DPCCH,breciveDPCCH);
-	cout<<"bledy"<<endl;
+	br.count(tr.DPCCH,rec.DPCCH);
+	cout<<"bledy DPCCH"<<endl;
 	cout<<br.get_errors()<<endl;
-	cout<<"BER"<<endl;
+	cout<<"BER DPCCH"<<endl;
 	cout<<br.get_errorrate()<<endl;
+
+	br.clear();
+	br.count(tr.E_DPCCH,rec.E_DPCCH);
+	cout<<"bledy E-DPCCH"<<endl;
+	cout<<br.get_errors()<<endl;
+	cout<<"BER E-DPCCH"<<endl;
+	cout<<br.get_errorrate()<<endl;
+
+	br.clear();
+	br.count(tr.HS_DPCCH,rec.HS_DPCCH);
+	cout<<"bledy HS-DPCCH"<<endl;
+	cout<<br.get_errors()<<endl;
+	cout<<"BER HS-DPCCH"<<endl;
+	cout<<br.get_errorrate()<<endl;
+
+	
 	return 0;
 }
