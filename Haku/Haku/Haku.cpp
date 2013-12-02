@@ -91,7 +91,7 @@ class transmiter
 {
 public:
 	int SF;
-	int SF_EDPDCH;
+	int SF_EDPDCH2,SF_EDPDCH3;
 
 	int DPCCH_NBits;
 
@@ -107,8 +107,9 @@ public:
 	double betaDPCCH,betaE_DPDCH,betaE_DPCCH,betaE_HS_DPCCH;
 	double betaDPCCHlin,betaE_DPDCHlin,betaE_DPCCHlin,betaE_HS_DPCCHlin;
 
-	vec OVSF256_0,OVSF256_1,OVSF256_33,OVSF256_64,OVSF256_65,OVSF256_66,OVSF256_67;
-	vec	OVSF4_1,OVSF4_2;
+	vec OVSF256_0,OVSF256_1,OVSF256_33,OVSF256_64;
+	vec	OVSF4_1;
+	vec OVSF2_1;
 
 	bvec DPCCH;
 	bvec HS_DPCCH;
@@ -125,8 +126,8 @@ public:
 
 	mGold gold;
 
-	smat OVSF;
-	smat OVSF4;
+	smat OVSF,OVSF4,OVSF2;
+
 	vec spreading(bvec data,vec code)
 	{
 		vec result;
@@ -168,7 +169,8 @@ public:
 		E_DPDCH3_NData=p.get_int("E_DPDCH3_NData");
 		E_DPDCH4_NData=p.get_int("E_DPDCH4_NData");
 		SF=p.get_int("SF");
-		SF_EDPDCH=p.get_int("SF_EDPDCH");
+		SF_EDPDCH2=p.get_int("SF_EDPDCH2");
+		SF_EDPDCH3=p.get_int("SF_EDPDCH3");
 		DPCCH_SLOT0=p.get_int("DPCCH_SLOT0");
 		DPCCH_SLOT1=p.get_int("DPCCH_SLOT1");
 		DPCCH_SLOT2=p.get_int("DPCCH_SLOT2");
@@ -196,18 +198,16 @@ public:
 		betaE_HS_DPCCHlin=pow10(betaE_HS_DPCCH/10.0);
 
 		OVSF=wcdma_spreading_codes (SF);
-		OVSF4=wcdma_spreading_codes(SF_EDPDCH);
+		OVSF4=wcdma_spreading_codes(SF_EDPDCH3);
+		OVSF2=wcdma_spreading_codes(SF_EDPDCH2);
 
 		OVSF256_0.set_length(SF,false);
 		OVSF256_1.set_length(SF,false);
 		OVSF256_33.set_length(SF,false);
 		OVSF256_64.set_length(SF,false);
-		OVSF256_65.set_length(SF,false);
-		OVSF256_66.set_length(SF,false);
-		OVSF256_67.set_length(SF,false);
-
-		OVSF4_1.set_length(SF_EDPDCH,false);
-		OVSF4_2.set_length(SF_EDPDCH,false);
+		
+		OVSF4_1.set_length(SF_EDPDCH3,false);
+		OVSF2_1.set_length(SF_EDPDCH2,false);
 
 		for(int i=0;i<OVSF.cols();i++)
 		{
@@ -215,16 +215,18 @@ public:
 		OVSF256_1[i]=OVSF(1,i);
 		OVSF256_33[i]=OVSF(33,i);
 		OVSF256_64[i]=OVSF(64,i);
-		OVSF256_65[i]=OVSF(65,i);
-		OVSF256_66[i]=OVSF(66,i);
-		OVSF256_67[i]=OVSF(67,i);
+		
 		}
 		for(int i=0;i<OVSF4.cols();i++)
 		{
 			OVSF4_1[i]=OVSF4(1,i);
-			OVSF4_2[i]=OVSF4(2,i);
+		
 		}
 
+		for(int i=0;i<OVSF2.cols();i++)
+		{
+			OVSF2_1[i]=OVSF2(1,i);
+		}
 		bvec DPCCH0=dec2bin(DPCCH_SLOT0,true);
 		bvec DPCCH1=dec2bin(DPCCH_SLOT1,true);
 		bvec DPCCH2=dec2bin(DPCCH_SLOT2,true);
@@ -339,11 +341,11 @@ int _tmain(int argc, _TCHAR* argv[])
 	tr.E_DPDCH3=randb(tr.E_DPDCH3_NData);
 	tr.E_DPDCH4=randb(tr.E_DPDCH4_NData);
 	tr.SP_E_DPDCH1=tr.spreading(tr.E_DPDCH1,tr.OVSF256_64);
-	tr.SP_E_DPDCH2=tr.spreading(tr.E_DPDCH2,tr.OVSF4_1);
+	tr.SP_E_DPDCH2=tr.spreading(tr.E_DPDCH2,tr.OVSF2_1);
 	tr.SP_E_DPDCH3=tr.spreading(tr.E_DPDCH3,tr.OVSF4_1);
 	tr.SP_E_DPDCH4=tr.spreading(tr.E_DPDCH4,tr.OVSF4_1);
 	//beta
-
+	
 	tr.SP_DPCCH=tr.SP_DPCCH*tr.betaDPCCHlin;
 	tr.SP_HS_DPCCH=tr.SP_HS_DPCCH*tr.betaE_HS_DPCCHlin;
 	tr.SP_E_DPCCH=tr.SP_E_DPCCH*tr.betaE_DPCCHlin;
@@ -378,7 +380,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	rec.HS_DPCCH=rec.despreading(tr.HS_DPCCH_NBits,tr.OVSF256_33,true);
 	rec.E_DPDCH1=rec.despreading(tr.E_DPDCH1_NData,tr.OVSF256_64,false);
 
-	rec.E_DPDCH2=rec.despreading(tr.E_DPDCH2_NData,tr.OVSF4_1,true);
+	rec.E_DPDCH2=rec.despreading(tr.E_DPDCH2_NData,tr.OVSF2_1,true);
 	rec.E_DPDCH3=rec.despreading(tr.E_DPDCH3_NData,tr.OVSF4_1,false);
 	rec.E_DPDCH4=rec.despreading(tr.E_DPDCH4_NData,tr.OVSF4_1,true);
 
