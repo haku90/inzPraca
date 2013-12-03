@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "itpp/itcomm.h"
-
+#include <fstream>
 
 using namespace itpp;
 using namespace std;
@@ -108,7 +108,7 @@ public:
 	double betaDPCCHlin,betaE_DPDCHlin,betaE_DPCCHlin,betaE_HS_DPCCHlin;
 
 	vec OVSF256_0,OVSF256_1,OVSF256_33,OVSF256_64;
-	vec	OVSF4_1;
+	vec	OVSF4_1,OVSF4_3;
 	vec OVSF2_1;
 
 	bvec DPCCH;
@@ -207,6 +207,7 @@ public:
 		OVSF256_64.set_length(SF,false);
 		
 		OVSF4_1.set_length(SF_EDPDCH3,false);
+		OVSF4_3.set_length(SF_EDPDCH3,false);
 		OVSF2_1.set_length(SF_EDPDCH2,false);
 
 		for(int i=0;i<OVSF.cols();i++)
@@ -220,6 +221,7 @@ public:
 		for(int i=0;i<OVSF4.cols();i++)
 		{
 			OVSF4_1[i]=OVSF4(1,i);
+		
 		
 		}
 
@@ -325,65 +327,140 @@ int _tmain(int argc, _TCHAR* argv[])
 	transmiter tr;
 	AWGN_Channel awg;
 	receiver rec;
+	GlobalRNG_randomize();
+	BERC brHS_DPCCH,brDPCCH,brE_DPCCH,brE_DPDCH1,brE_DPDCH2,brE_DPDCH3,brE_DPDCH4;
+	vec berHS_DPCCH,berDPCCH,berE_DPCCH,berE_DPDCH1,berE_DPDCH2,berE_DPDCH3,berE_DPDCH4;
+	vec EbN0dB,EbN0,N0;
+	ofstream out;
+	int numOfIteration=25;
+	int numOfErrors=100;
+	double Ec,Eb;
+	EbN0dB=linspace(-100,40,8);
+	EbN0=pow(10,EbN0dB/10.0);
+	Eb=1.0;
+	N0=Eb*pow(EbN0,-1.0);
+
+	berHS_DPCCH.set_size(EbN0dB.length(),false);
+	berDPCCH.set_size(EbN0dB.length(),false);
+	berE_DPCCH.set_size(EbN0dB.length(),false);
+	berE_DPDCH1.set_size(EbN0dB.length(),false);
+	berE_DPDCH2.set_size(EbN0dB.length(),false);
+	berE_DPDCH3.set_size(EbN0dB.length(),false);
+	berE_DPDCH4.set_size(EbN0dB.length(),false);
+
 	
-	
-	//DPCCH
-	tr.SP_DPCCH=tr.spreading(tr.DPCCH,tr.OVSF256_0);
-	//HS-DPCCH
-	tr.HS_DPCCH=randb(tr.HS_DPCCH_NBits);
-	tr.SP_HS_DPCCH=tr.spreading(tr.HS_DPCCH,tr.OVSF256_33);
-	//E-DPCCH
-	tr.E_DPCCH=randb(tr.E_DPCCH_NBits);
-	tr.SP_E_DPCCH=tr.spreading(tr.E_DPCCH,tr.OVSF256_1);
-	//E-DPDCH
-	tr.E_DPDCH1=randb(tr.E_DPDCH1_NData);
-	tr.E_DPDCH2=randb(tr.E_DPDCH2_NData);
-	tr.E_DPDCH3=randb(tr.E_DPDCH3_NData);
-	tr.E_DPDCH4=randb(tr.E_DPDCH4_NData);
-	tr.SP_E_DPDCH1=tr.spreading(tr.E_DPDCH1,tr.OVSF256_64);
-	tr.SP_E_DPDCH2=tr.spreading(tr.E_DPDCH2,tr.OVSF2_1);
-	tr.SP_E_DPDCH3=tr.spreading(tr.E_DPDCH3,tr.OVSF4_1);
-	tr.SP_E_DPDCH4=tr.spreading(tr.E_DPDCH4,tr.OVSF4_1);
-	//beta
-	
-	tr.SP_DPCCH=tr.SP_DPCCH*tr.betaDPCCHlin;
-	tr.SP_HS_DPCCH=tr.SP_HS_DPCCH*tr.betaE_HS_DPCCHlin;
-	tr.SP_E_DPCCH=tr.SP_E_DPCCH*tr.betaE_DPCCHlin;
-	tr.SP_E_DPDCH1=tr.SP_E_DPDCH1*tr.betaE_DPDCHlin;
-	tr.SP_E_DPDCH2=tr.SP_E_DPDCH2*tr.betaE_DPDCHlin;
-	tr.SP_E_DPDCH3=tr.SP_E_DPDCH3*tr.betaE_DPDCHlin;
-	tr.SP_E_DPDCH4=tr.SP_E_DPDCH4*tr.betaE_DPDCHlin;	
-	
-	//radio frame
-	tr.radioFrame.set_length(tr.gold.numG);
-	for(int i=0;i<tr.gold.numG;i++)
+	for(int i=0;i<EbN0dB.length();i++)
 	{
-		tr.radioFrame[i]._Val[0]=tr.SP_E_DPCCH[i]+tr.SP_E_DPDCH1[i]+tr.SP_E_DPDCH3[i];
-		tr.radioFrame[i]._Val[1]=tr.SP_DPCCH[i]+tr.SP_HS_DPCCH[i]+tr.SP_E_DPDCH2[i]+tr.SP_E_DPDCH4[i];
+			brDPCCH.clear();
+			brHS_DPCCH.clear();
+			brE_DPCCH.clear();
+			brE_DPDCH1.clear();
+			brE_DPDCH2.clear();
+			brE_DPDCH3.clear();
+			brE_DPDCH4.clear();
+			cout<<"Eb N0: "<<EbN0dB(i)<<endl;
+
+		for(int j=0;j<numOfIteration;j++)
+		{
+			cout<<"Num of Iteration: "<<j+1<<endl;
+			//DPCCH
+			tr.SP_DPCCH=tr.spreading(tr.DPCCH,tr.OVSF256_0);
+			//HS-DPCCH
+			tr.HS_DPCCH=randb(tr.HS_DPCCH_NBits);
+			tr.SP_HS_DPCCH=tr.spreading(tr.HS_DPCCH,tr.OVSF256_33);
+			//E-DPCCH
+			tr.E_DPCCH=randb(tr.E_DPCCH_NBits);
+			tr.SP_E_DPCCH=tr.spreading(tr.E_DPCCH,tr.OVSF256_1);
+			//E-DPDCH
+			tr.E_DPDCH1=randb(tr.E_DPDCH1_NData);
+			tr.E_DPDCH2=randb(tr.E_DPDCH2_NData);
+			tr.E_DPDCH3=randb(tr.E_DPDCH3_NData);
+			tr.E_DPDCH4=randb(tr.E_DPDCH4_NData);
+			tr.SP_E_DPDCH1=tr.spreading(tr.E_DPDCH1,tr.OVSF2_1);
+			tr.SP_E_DPDCH2=tr.spreading(tr.E_DPDCH2,tr.OVSF2_1);
+			tr.SP_E_DPDCH3=tr.spreading(tr.E_DPDCH3,tr.OVSF4_1);
+			tr.SP_E_DPDCH4=tr.spreading(tr.E_DPDCH4,tr.OVSF4_1);
+			//beta
 	
+			tr.SP_DPCCH=tr.SP_DPCCH*tr.betaDPCCHlin;
+			tr.SP_HS_DPCCH=tr.SP_HS_DPCCH*tr.betaE_HS_DPCCHlin;
+			tr.SP_E_DPCCH=tr.SP_E_DPCCH*tr.betaE_DPCCHlin;
+			tr.SP_E_DPDCH1=tr.SP_E_DPDCH1*tr.betaE_DPDCHlin;
+			tr.SP_E_DPDCH2=tr.SP_E_DPDCH2*tr.betaE_DPDCHlin;
+			tr.SP_E_DPDCH3=tr.SP_E_DPDCH3*tr.betaE_DPDCHlin;
+			tr.SP_E_DPDCH4=tr.SP_E_DPDCH4*tr.betaE_DPDCHlin;	
+	
+			//radio frame
+			tr.radioFrame.set_length(tr.gold.numG);
+			for(int i=0;i<tr.gold.numG;i++)
+			{
+				tr.radioFrame[i]._Val[0]=tr.SP_E_DPCCH[i]+tr.SP_E_DPDCH1[i]+tr.SP_E_DPDCH3[i];
+				tr.radioFrame[i]._Val[1]=tr.SP_DPCCH[i]+tr.SP_HS_DPCCH[i]+tr.SP_E_DPDCH2[i]+tr.SP_E_DPDCH4[i];
+	
+			}
+			
+			
+	
+			cvec radioFrameScrambling,radioFrameDescr,channel;
+			radioFrameScrambling=tr.scrambling(tr.radioFrame,tr.gold.c);
+			//kanal
+			awg.set_noise(N0(i));
+			channel=awg(radioFrameScrambling);
+			
+			//odbiornik
+			radioFrameDescr=rec.descrambling(channel,tr.gold.cConjugate);
+			rec.rRecive=real(radioFrameDescr);
+			rec.iRecive=imag(radioFrameDescr);
+
+			rec.DPCCH=rec.despreading(tr.DPCCH_NBits,tr.OVSF256_0,true);
+			rec.E_DPCCH=rec.despreading(tr.E_DPCCH_NBits,tr.OVSF256_1,false);
+			rec.HS_DPCCH=rec.despreading(tr.HS_DPCCH_NBits,tr.OVSF256_33,true);
+
+			rec.E_DPDCH1=rec.despreading(tr.E_DPDCH1_NData,tr.OVSF2_1,false);
+			rec.E_DPDCH2=rec.despreading(tr.E_DPDCH2_NData,tr.OVSF2_1,true);
+			rec.E_DPDCH3=rec.despreading(tr.E_DPDCH3_NData,tr.OVSF4_1,false);
+			rec.E_DPDCH4=rec.despreading(tr.E_DPDCH4_NData,tr.OVSF4_1,true);
+
+			brDPCCH.count(tr.DPCCH,rec.DPCCH);
+			brHS_DPCCH.count(tr.HS_DPCCH,rec.HS_DPCCH);
+			brE_DPCCH.count(tr.E_DPCCH,rec.E_DPCCH);
+			brE_DPDCH1.count(tr.E_DPDCH1,rec.E_DPDCH1);
+			brE_DPDCH2.count(tr.E_DPDCH2,rec.E_DPDCH2);
+			brE_DPDCH3.count(tr.E_DPDCH3,rec.E_DPDCH3);
+			brE_DPDCH4.count(tr.E_DPDCH4,rec.E_DPDCH4);
+			
+			berDPCCH(i)=brDPCCH.get_errorrate();
+			berHS_DPCCH(i)=brHS_DPCCH.get_errorrate();
+			berE_DPCCH(i)=brE_DPCCH.get_errorrate();
+			berE_DPDCH1(i)=brE_DPDCH1.get_errorrate();
+			berE_DPDCH2(i)=brE_DPDCH2.get_errorrate();
+			berE_DPDCH3(i)=brE_DPDCH3.get_errorrate();
+			berE_DPDCH4(i)=brE_DPDCH4.get_errorrate();
+			cout<<"errors DPCCH: "<<brDPCCH.get_errors()<<" errors HS-DPCCH: "<<brHS_DPCCH.get_errors()<<" errors E-DPCCH: "
+				<<brE_DPCCH.get_errors()<<" errors E-DPDCH1: "<<brE_DPDCH1.get_errors()<<" errors E-DPDCH2: "<<brE_DPDCH2.get_errors()
+				<<" errors E-DPDCH3: "<<brE_DPDCH3.get_errors()<<"	errors E-DPDCH4: "<<brE_DPDCH4.get_errors()<<endl;
+				
+			if(brDPCCH.get_errors()>numOfErrors && brE_DPCCH.get_errors()>numOfErrors && brHS_DPCCH.get_errors()>numOfErrors 
+				&& brE_DPDCH1.get_errors()>numOfErrors && brE_DPDCH2.get_errors()>numOfErrors &&brE_DPDCH3.get_errors()>numOfErrors 
+				&& brE_DPDCH4.get_errors()>numOfErrors)
+			{
+				break;
+			}
+		}
 	}
-	
-	
-	cvec radioFrameScrambling,radioFrameDescr,channel;
-	radioFrameScrambling=tr.scrambling(tr.radioFrame,tr.gold.c);
-	//kanal
-	//awg.set_noise();
-	channel=awg(radioFrameScrambling);
-	
-	//odbiornik
-	radioFrameDescr=rec.descrambling(channel,tr.gold.cConjugate);
-	rec.rRecive=real(radioFrameDescr);
-	rec.iRecive=imag(radioFrameDescr);
+	//stats
+	out.open("BER.csv", ios_base::out | ios_base::trunc);
+	out<<"Eb/N0"<<';'<<"BER DPCCH"<<';'<<"BER HS_DPCCH"<<';'<<"BER E_DPCCH"<<';'<<"BER E_DPDCH1"<<';'
+		<<"BER E_DPDCH2"<<';'<<"BER E_DPDCH3"<<';'<<"BER E_DPDCH4"<<endl;
 
-	rec.DPCCH=rec.despreading(tr.DPCCH_NBits,tr.OVSF256_0,true);
-	rec.E_DPCCH=rec.despreading(tr.E_DPCCH_NBits,tr.OVSF256_1,false);
-	rec.HS_DPCCH=rec.despreading(tr.HS_DPCCH_NBits,tr.OVSF256_33,true);
-	rec.E_DPDCH1=rec.despreading(tr.E_DPDCH1_NData,tr.OVSF256_64,false);
-
-	rec.E_DPDCH2=rec.despreading(tr.E_DPDCH2_NData,tr.OVSF2_1,true);
-	rec.E_DPDCH3=rec.despreading(tr.E_DPDCH3_NData,tr.OVSF4_1,false);
-	rec.E_DPDCH4=rec.despreading(tr.E_DPDCH4_NData,tr.OVSF4_1,true);
-
+	for(int i=0;i<EbN0dB.length();i++)
+	{
+	
+		out<<EbN0dB(i)<<';'<<berDPCCH(i)<<';'<<berHS_DPCCH(i)<<';'<<berE_DPCCH(i)<<';'<<berE_DPDCH1(i)<<';'
+			<<berE_DPDCH2(i)<<';'<<berE_DPDCH3(i)<<';'<<berE_DPDCH4(i)<<endl;
+	}
+	out.close();
+	/*
 	BERC br;
 	br.count(tr.DPCCH,rec.DPCCH);
 	cout<<"bledy DPCCH"<<endl;
@@ -432,7 +509,6 @@ int _tmain(int argc, _TCHAR* argv[])
 	cout<<br.get_errors()<<endl;
 	cout<<"BER E-DPDCH4"<<endl;
 	cout<<br.get_errorrate()<<endl;
-	
-	
+	*/
 	return 0;
 }
