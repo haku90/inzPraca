@@ -104,8 +104,9 @@ public:
 
 	int E_DPDCH1_NData, E_DPDCH2_NData,E_DPDCH3_NData,E_DPDCH4_NData;
 	int E_DPCCH_NBits;
-	double betaDPCCH,betaE_DPDCH,betaE_DPCCH,betaE_HS_DPCCH;
-	double betaDPCCHlin,betaE_DPDCHlin,betaE_DPCCHlin,betaE_HS_DPCCHlin;
+	double betaDPCCH,betaE_DPCCH,betaE_DPDCH1,betaE_DPDCH2,betaE_DPDCH3,betaE_DPDCH4,betaE_HS_DPCCH;
+	double betaDPCCHlin,betaE_DPDCH1lin,betaE_DPDCH2lin,betaE_DPDCH3lin,betaE_DPDCH4lin,
+			betaE_DPCCHlin,betaE_HS_DPCCHlin;
 
 	vec OVSF256_0,OVSF256_1,OVSF256_33,OVSF256_64;
 	vec	OVSF4_1,OVSF4_3;
@@ -188,12 +189,18 @@ public:
 		DPCCH_SLOT14=p.get_int("DPCCH_SLOT14");
 		 
 		betaDPCCH=p.get_int("betaDPCCH");
-		betaE_DPDCH=p.get_int("betaE_DPDCH");
+		betaE_DPDCH1=p.get_int("betaE_DPDCH1");
+		betaE_DPDCH2=p.get_int("betaE_DPDCH2");
+		betaE_DPDCH3=p.get_int("betaE_DPDCH3");
+		betaE_DPDCH4=p.get_int("betaE_DPDCH4");
 		betaE_DPCCH=p.get_int("betaE_DPCCH");
 		betaE_HS_DPCCH=p.get_int("betaE_HS_DPCCH");
 	
 		betaDPCCHlin=pow10(betaDPCCH/10.0);
-		betaE_DPDCHlin=pow10(betaE_DPDCH/10.0);
+		betaE_DPDCH1lin=pow10(betaE_DPDCH1/10.0);
+		betaE_DPDCH2lin=pow10(betaE_DPDCH2/10.0);
+		betaE_DPDCH3lin=pow10(betaE_DPDCH3/10.0);
+		betaE_DPDCH4lin=pow10(betaE_DPDCH4/10.0);
 		betaE_DPCCHlin=pow10(betaE_DPCCH/10.0);
 		betaE_HS_DPCCHlin=pow10(betaE_HS_DPCCH/10.0);
 
@@ -332,12 +339,13 @@ int _tmain(int argc, _TCHAR* argv[])
 	vec berHS_DPCCH,berDPCCH,berE_DPCCH,berE_DPDCH1,berE_DPDCH2,berE_DPDCH3,berE_DPDCH4;
 	vec EbN0dB,EbN0,N0;
 	ofstream out;
-	int numOfIteration=25;
+	int numOfIteration=1000;
 	int numOfErrors=100;
-	double Ec,Eb;
-	EbN0dB=linspace(-100,40,8);
+	double Eb;
+	EbN0dB=linspace(-20,6,14);
 	EbN0=pow(10,EbN0dB/10.0);
-	Eb=1.0;
+	Eb=tr.betaDPCCHlin+tr.betaE_DPCCHlin+tr.betaE_DPDCH1lin+tr.betaE_DPDCH2lin+tr.betaE_DPDCH3lin
+		+tr.betaE_DPDCH4lin+tr.betaE_HS_DPCCHlin;
 	N0=Eb*pow(EbN0,-1.0);
 
 	berHS_DPCCH.set_size(EbN0dB.length(),false);
@@ -385,10 +393,10 @@ int _tmain(int argc, _TCHAR* argv[])
 			tr.SP_DPCCH=tr.SP_DPCCH*tr.betaDPCCHlin;
 			tr.SP_HS_DPCCH=tr.SP_HS_DPCCH*tr.betaE_HS_DPCCHlin;
 			tr.SP_E_DPCCH=tr.SP_E_DPCCH*tr.betaE_DPCCHlin;
-			tr.SP_E_DPDCH1=tr.SP_E_DPDCH1*tr.betaE_DPDCHlin;
-			tr.SP_E_DPDCH2=tr.SP_E_DPDCH2*tr.betaE_DPDCHlin;
-			tr.SP_E_DPDCH3=tr.SP_E_DPDCH3*tr.betaE_DPDCHlin;
-			tr.SP_E_DPDCH4=tr.SP_E_DPDCH4*tr.betaE_DPDCHlin;	
+			tr.SP_E_DPDCH1=tr.SP_E_DPDCH1*tr.betaE_DPDCH1lin;
+			tr.SP_E_DPDCH2=tr.SP_E_DPDCH2*tr.betaE_DPDCH2lin;
+			tr.SP_E_DPDCH3=tr.SP_E_DPDCH3*tr.betaE_DPDCH3lin;
+			tr.SP_E_DPDCH4=tr.SP_E_DPDCH4*tr.betaE_DPDCH4lin;	
 	
 			//radio frame
 			tr.radioFrame.set_length(tr.gold.numG);
